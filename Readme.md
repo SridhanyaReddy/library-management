@@ -12,12 +12,14 @@ This project is tailored specifically for **B.Tech University Practical & Viva V
 1. **Clear Business Domain:** Everyone understands a library (Books, Borrowing, Returning). The examiner requires zero explanation of the business logic.
 2. **Encapsulates Core OOPs:** It demonstrates encapsulation, lists, object mutation, and modularity in under 150 lines of Java.
 3. **Ideal for Unit Testing:** Tracking book availability creates perfect binary test cases (success/failure scenarios) for JUnit 5, showcasing clean CI/CD assertions.
-4. **Non-Interactive Simulation:** The runtime is simulated using automated console logs. This ensures that the Jenkins pipeline can execute and exit cleanly without hanging waiting for input.
+4. **Dual Execution Modes (CLI & Browser UI):**
+   * **Simulation Mode (Default):** Runs a quick CLI simulation and exits immediately. This is run by Jenkins during the pipeline build to ensure the build completes successfully without blocking.
+   * **Interactive Web UI Mode:** Starts a local HTTP server on port `8081` rendering a premium HTML/CSS dashboard. You can access it in the browser and interactively borrow/return books.
 
 ### ASCII Flow Diagram
 ```text
   [ Developer Workspace ] 
-             │ (Writes Code / Runs JUnit Tests Locally)
+             │ (Runs Local Web Server UI at http://localhost:8081)
              ▼
       [ Git Commit & Push ]
              │
@@ -32,7 +34,7 @@ This project is tailored specifically for **B.Tech University Practical & Viva V
                                                 ├── Stage 1: Clone SCM
                                                 ├── Stage 2: Maven Compile
                                                 ├── Stage 3: JUnit Test
-                                                └── Stage 4: Simulated Run
+                                                └── Stage 4: CLI Run Simulation
 ```
 
 ### Folder Structure
@@ -40,7 +42,7 @@ The project uses the standard **Maven directory layout**:
 ```text
 library-management/
 ├── .gitignore               # Configures files to exclude from Git tracking
-├── JenkinsFile              # Declarative CI/CD pipeline definition
+├── Jenkinsfile              # Declarative CI/CD pipeline definition
 ├── pom.xml                  # Maven Project Object Model (dependencies/plugins)
 ├── Readme.md                # Technical documentation & Exam guide (This File)
 └── src/
@@ -48,7 +50,7 @@ library-management/
     │   └── java/
     │       ├── Book.java    # Represents Book entity (states: borrow, return)
     │       ├── Library.java # Encapsulates collection of books and search logic
-    │       └── Main.java    # CLI Simulation entry point (non-interactive)
+    │       └── Main.java    # CLI Simulation & HTTP Web Server (Dual Mode)
     └── test/
         └── java/
             └── LibraryTest.java # JUnit 5 test suite (verifies library rules)
@@ -106,17 +108,28 @@ library-management/
    git push -u origin main
    ```
 
-### Step 2: Local Maven Build & Test Verification
-Before running Jenkins, verify that the project builds locally:
+### Step 2: Running the Project Locally (CLI & Browser UI)
+Before running Jenkins, verify how to execute the project locally:
+
+#### Option A: Running the CLI Simulation
+Used in the automated Jenkins pipeline to run a quick test sequence and exit:
 ```bash
-# Clean previous builds and compile source files
-mvn clean compile
-
-# Execute JUnit 5 Unit Tests
-mvn test
-
-# Run the simulation locally
 mvn exec:java
+```
+
+#### Option B: Running the Interactive HTML Browser UI
+Starts a web server on port `8081` to display the library dashboard in your browser:
+```bash
+mvn exec:java -Dexec.arguments="server"
+```
+Once run:
+1. Open your web browser and go to: **`http://localhost:8081`**
+2. You will see the visual Library Dashboard. Click **Borrow Book** or **Return Book** to see live state changes!
+3. Press `Ctrl + C` in your terminal to stop the web server.
+
+#### Option C: Executing Unit Tests
+```bash
+mvn test
 ```
 
 ### Step 3: Jenkins Installation & Configuration
@@ -139,7 +152,7 @@ mvn exec:java
    - SCM: Select **Git**.
    - Repository URL: Enter your GitHub repository URL (e.g., `https://github.com/<YOUR_GITHUB_USERNAME>/library-management.git`).
    - Credentials: Click **Add** -> **Jenkins** if it's a private repo, otherwise leave blank.
-   - Script Path: Enter `JenkinsFile` (Ensure casing matches exactly).
+   - Script Path: Enter `Jenkinsfile` (Ensure casing matches exactly).
 5. Click **Save**.
 6. Run the first build manually by clicking **Build Now** on the left menu.
 
@@ -150,7 +163,7 @@ To make Jenkins build code *automatically* on every `git push`:
    *(If working on localhost, download `ngrok` and route port 8080: `ngrok http 8080`. Copy the forwarding URL).*
 3. Set Content type to `application/json`.
 4. Select **Just the push event** and click **Add webhook**.
-5. Test it by editing `Main.java` locally, committing, and pushing. Jenkins will immediately start building!
+5. Test it by editing code locally, committing, and pushing. Jenkins will immediately start building!
 
 ---
 
@@ -158,20 +171,6 @@ To make Jenkins build code *automatically* on every `git push`:
 
 ### Expected Local `mvn test` Output
 ```text
-[INFO] Scanning for projects...
-[INFO] -------------------< com.devops:library-management >--------------------
-[INFO] Building DevOps Library Management Project 1.0.0
-[INFO]   from pom.xml
-[INFO] --------------------------------[ jar ]---------------------------------
-[INFO] 
-[INFO] --- clean:3.2.0:clean (default-clean) @ library-management ---
-[INFO] 
-[INFO] --- resources:3.3.0:resources (default-resources) @ library-management ---
-[INFO] 
-[INFO] --- compiler:3.11.0:compile (default-compile) @ library-management ---
-[INFO] Compiling 3 source files to C:\Users\...\library-management\target\classes
-[INFO] 
-[INFO] --- surefire:3.1.2:test (default-test) @ library-management ---
 [INFO] Running LibraryTest
 [INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.08 s - in LibraryTest
 [INFO] 
@@ -186,7 +185,7 @@ To make Jenkins build code *automatically* on every `git push`:
 ### Expected Jenkins Pipeline Console Output
 ```text
 Started by user Admin
-Obtained JenkinsFile from git https://github.com/student/library-management.git
+Obtained Jenkinsfile from git https://github.com/student/library-management.git
 [Pipeline] Start of Pipeline
 [Pipeline] node
 Running on Jenkins in C:\ProgramData\Jenkins\.jenkins\workspace\Library-Management-Pipeline
@@ -234,8 +233,7 @@ Executing the application simulation...
 =================================================
    LIBRARY MANAGEMENT SYSTEM - SIMULATION RUN    
 =================================================
-[INFO] Initializing Library database...
-[INFO] Adding sample books to library catalog...
+[INFO] Running in Simulation Mode (exits cleanly for Jenkins)
 [SUCCESS] Total books in catalog: 3
 ...
 =================================================
@@ -273,8 +271,8 @@ Finished: SUCCESS
 ### Q6: What is a Declarative Pipeline vs. a Scripted Pipeline?
 **A:** Declarative pipeline is a newer, simpler, structured approach with strict syntax (using blocks like `pipeline`, `agent`, `stages`). Scripted pipeline uses Groovy code and is more complex. We use a Declarative Pipeline.
 
-### Q7: Why are we using a non-interactive simulation in `Main.java`?
-**A:** Because Jenkins pipelines run in background environments without a terminal screen. If the program pauses to wait for user keyboard inputs (`Scanner.nextLine()`), the pipeline will hang forever.
+### Q7: Why are we using a non-interactive simulation in the Jenkins build?
+**A:** Because Jenkins pipelines run in background environments without a terminal screen. If the program pauses to wait for user keyboard inputs (`Scanner.nextLine()`), the pipeline will hang forever. Thus, we run the non-interactive simulation by default, and starting the web server requires the `server` argument.
 
 ### Q8: What does `mvn clean` do?
 **A:** It deletes the `/target` directory created by previous builds to ensure that the next compilation starts from scratch and is not polluted by stale classes.
@@ -285,7 +283,7 @@ Finished: SUCCESS
 ### Q10: What is the purpose of the `.gitignore` file?
 **A:** It tells Git to ignore compiled outputs (like `/target`) and user-specific configuration files (like IDE settings). These files shouldn't be shared because they are generated locally and vary between environments.
 
-### Q11: Explain the stages in your `JenkinsFile`.
+### Q11: Explain the stages in your `Jenkinsfile`.
 **A:** 
 - **Clone:** Pulls the latest code version from GitHub.
 - **Build:** Compiles the source files.
@@ -314,13 +312,13 @@ Finished: SUCCESS
 **A:** A branch is an independent line of development. The default branch is `main`. Developers create new branches to test features without affecting stable code.
 
 ### Q19: What is the Maven Central Repository?
-**A:** A remote repository hosted by the Maven community containing thousands of open-source libraries. Maven automatically downloads required JAR files (like JUnit) from it.
+**A:** A remote repository hosted by the community containing thousands of open-source libraries. Maven automatically downloads required JAR files (like JUnit) from it.
 
 ### Q20: Explain the Maven lifecycle order.
 **A:** `validate` -> `compile` -> `test` -> `package` -> `integration-test` -> `verify` -> `install` -> `deploy`. Calling any phase automatically runs all preceding phases.
 
-### Q21: What is a build trigger in Jenkins?
-**A:** An event that initiates a build. Examples include manual clicks, timed schedules (cron), polling the SCM for changes, or receiving webhook HTTP notifications.
+### Q21: How is the browser UI implemented without Spring Boot?
+**A:** We use the JDK's native `com.sun.net.httpserver.HttpServer` class to start an HTTP server on port `8081`. It returns raw HTML populated with real-time library state and CSS styles, allowing interaction without complex backend frameworks.
 
 ---
 
@@ -342,7 +340,7 @@ Finished: SUCCESS
 
 ### Error 2: Jenkins pipeline hangs indefinitely in the "Run" stage
 * **Symptom:** The pipeline keeps spinning, never finishing the build.
-* **Fix:** The program is waiting for user keyboard inputs. Ensure you are using the non-interactive CLI simulation code in `Main.java` and not a `Scanner` listening to `System.in`.
+* **Fix:** The program is running in server mode. Ensure the Jenkinsfile triggers `mvn exec:java` (without arguments) so it runs in simulation mode, and NOT with the `server` argument.
 
 ### Error 3: Jenkins says `mvn: command not found`
 * **Symptom:** Script exits with code 127 in Jenkins build logs.
