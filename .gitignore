@@ -1,0 +1,19 @@
+# Target build directory created by Maven
+target/
+
+# IDE files (Eclipse, IntelliJ IDEA, VS Code)
+.classpath
+.project
+.settings/
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Log files
+*.log
