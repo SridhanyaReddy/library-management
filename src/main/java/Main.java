@@ -99,7 +99,7 @@ public class Main {
             html.append("<div class='container'>");
             html.append("<h1>📚 Library Management Dashboard</h1>");
             html.append("<div class='subtitle'>B.Tech DevOps Practical Examination Demonstration</div>");
-            html.append("<div style='text-align: center; margin-top: -1.5rem; margin-bottom: 2rem; font-size: 0.95rem; color: #38bdf8; font-weight: 600;'>Candidate Name: Sridhanya Reddy Manda &nbsp;|&nbsp; Reg No: [Enter Register Number Here]</div>");
+            html.append("<div style='text-align: center; margin-top: -1.5rem; margin-bottom: 2rem; font-size: 0.95rem; color: #38bdf8; font-weight: 600;'>Candidate Name: Sridhanya Reddy Manda &nbsp;|&nbsp; Reg No: 24951A12A8</div>");
 
             html.append("<table>");
             html.append("<tr><th>ISBN</th><th>Title</th><th>Author</th><th>Status</th><th>Actions</th></tr>");
